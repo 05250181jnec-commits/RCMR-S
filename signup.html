@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCMRS | Create Account</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .login-box {
+            width: 400px; background: #ffffff; border: 1px solid #333;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); padding: 40px 30px; text-align: center;
+        }
+
+        .logo-container {
+            width: 80px; height: 80px; margin: 0 auto 15px auto; border-radius: 50%;
+            background: white; border: 2px solid #3498db; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .logo-container img { width: 80%; height: auto; }
+
+        h1 { color: #0000ff; font-size: 24px; font-weight: bold; margin-bottom: 20px; font-family: 'Times New Roman', Times, serif; }
+
+        .form-group { text-align: left; margin-bottom: 12px; }
+        .form-group label { display: flex; align-items: center; font-size: 13px; color: #000; margin-bottom: 4px; }
+        .checkbox-square { width: 10px; height: 10px; border: 1px solid #333; margin-right: 6px; display: inline-block; }
+        
+        .form-group input, .form-group select { 
+            width: 100%; padding: 9px; border: 1px solid #999; border-radius: 20px; 
+            outline: none; box-shadow: inset 0px 1px 3px rgba(0,0,0,0.1); font-size: 13px; 
+            background-color: white;
+        }
+
+        .btn-login { width: 100%; padding: 10px; background-color: #0056ff; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 15px; }
+        .btn-login:hover { background-color: #0040cc; }
+
+        .create-account { display: inline-block; margin-top: 20px; color: #0000ff; font-weight: bold; text-decoration: none; font-size: 13px; }
+        .create-account:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="login-box">
+        <div class="logo-container">
+            <img src="media/logo.png" alt="RCMRS Logo" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
+        </div>
+
+        <h1>CREATE ACCOUNT</h1>
+
+        <form id="signupForm">
+            
+            <div class="form-group">
+                <label><span class="checkbox-square"></span> Register As:</label>
+                <select id="role" required>
+                    <option value="" disabled selected>-- Select Your Role --</option>
+                    <option value="Citizen">Citizen</option>
+                    <option value="Maintenance">Maintenance Team</option>
+                    <option value="Admin">Administrator</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><span class="checkbox-square"></span> Full Name:</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label><span class="checkbox-square"></span> Email Address:</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label><span class="checkbox-square"></span> Phone Number:</label>
+                <input type="text" id="phone" required>
+            </div>
+
+            <div class="form-group">
+                <label><span class="checkbox-square"></span> Password:</label>
+                <input type="password" id="password" required>
+            </div>
+
+            <button type="submit" class="btn-login">SIGN UP</button>
+        </form>
+
+        <a href="index.html" class="create-account">Already have an account? Log In</a>
+    </div>
+
+    <script>
+        document.getElementById("signupForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const selectedRole = document.getElementById("role").value;
+            
+            alert(`Successfully created a new ${selectedRole} account!`);
+            window.location.href = "index.html";
+        });
+    </script>
+</body>
+</html>

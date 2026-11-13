@@ -3,56 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCMRS | Unified Login</title>
+    <title>RCMRS | Login</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: #f0f4f8; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background-color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         
-        .auth-card { 
-            background: white; width: 100%; max-width: 420px; padding: 2.5rem 2rem; 
-            border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); margin: 1rem;
+        .login-box {
+            width: 400px; background: #ffffff; border: 1px solid #333;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); padding: 40px 30px; text-align: center;
         }
-        
-        .header-text { text-align: center; margin-bottom: 2rem; }
-        .header-text h2 { color: #2c3e50; font-size: 1.8rem; margin-bottom: 0.5rem; }
-        .header-text p { color: #7f8c8d; font-size: 0.9rem; }
 
-        .form-group { margin-bottom: 1.2rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; color: #34495e; font-size: 0.9rem; font-weight: 600; }
+        .logo-container {
+            width: 100px; height: 100px; margin: 0 auto 20px auto; border-radius: 50%;
+            background: white; border: 2px solid #3498db; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .logo-container img { width: 80%; height: auto; }
+
+        h1 { color: #0000ff; font-size: 28px; font-weight: bold; margin-bottom: 20px; font-family: 'Times New Roman', Times, serif; }
+
+        .form-group { text-align: left; margin-bottom: 12px; }
+        .form-group label { display: flex; align-items: center; font-size: 13px; color: #000; margin-bottom: 4px; }
+        .checkbox-square { width: 10px; height: 10px; border: 1px solid #333; margin-right: 6px; display: inline-block; }
         
         .form-group input, .form-group select { 
-            width: 100%; padding: 12px; border: 1px solid #ccc; 
-            border-radius: 6px; outline: none; font-size: 1rem;
+            width: 100%; padding: 9px; border: 1px solid #999; border-radius: 20px; 
+            outline: none; box-shadow: inset 0px 1px 3px rgba(0,0,0,0.1); font-size: 13px; 
+            background-color: white;
         }
-        
-        .form-group input:focus, .form-group select:focus { border-color: #3498db; }
 
-        .btn { 
-            width: 100%; padding: 12px; background: #3498db; color: white; 
-            border: none; border-radius: 6px; cursor: pointer; 
-            font-size: 1rem; font-weight: bold; margin-top: 10px;
-        }
-        .btn:hover { background: #2980b9; }
+        .btn-login { width: 100%; padding: 10px; background-color: #0056ff; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 15px; }
+        .btn-login:hover { background-color: #0040cc; }
 
-        .alert { 
-            padding: 12px; background: #f8d7da; color: #721c24; 
-            border-radius: 6px; margin-top: 1.5rem; text-align: center; 
-            font-size: 0.9rem; display: none; 
-        }
+        .forgot-password { display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 15px; color: #000; text-decoration: none; }
+
+        .create-account { display: inline-block; margin-top: 25px; color: #0000ff; font-weight: bold; text-decoration: none; font-size: 13px; }
+        .create-account:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
-    <div class="auth-card">
-        <div class="header-text">
-            <h2>🚧 RCMRS Login</h2>
-            <p>Road Condition & Maintenance Request System</p>
+    <div class="login-box">
+        <div class="logo-container">
+            <img src="media/logo.png" alt="RCMRS Logo" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
         </div>
 
-        <form id="unifiedLoginForm">
-            <!-- Role Selector Dropdown -->
+        <h1>LOG IN</h1>
+
+        <form id="loginForm">
+            <!-- NEW ROLE DROPDOWN -->
             <div class="form-group">
-                <label>Login As:</label>
+                <label><span class="checkbox-square"></span> Login As:</label>
                 <select id="role" required>
                     <option value="" disabled selected>-- Select Your Role --</option>
                     <option value="citizen">Citizen</option>
@@ -62,71 +63,48 @@
             </div>
 
             <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="email" placeholder="Enter your email" required>
+                <label><span class="checkbox-square"></span> Email Address:</label>
+                <input type="email" id="email" required>
             </div>
 
             <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="password" placeholder="Enter your password" required>
+                <label><span class="checkbox-square"></span> Enter Password:</label>
+                <input type="password" id="password" required>
             </div>
 
-            <button type="submit" class="btn">Login</button>
-            <div id="msg" class="alert"></div>
+            <button type="submit" class="btn-login">LOG IN</button>
+
+            <a href="#" class="forgot-password">
+                <span class="checkbox-square"></span> Forget Password?
+            </a>
         </form>
-        
-        <div style="text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: #999;">
-            <p><b>Demo Credentials (Password: 1234)</b></p>
-            <p>Citizen: nima@rcmrs.bt</p>
-            <p>Admin: sangay@rcmrs.bt</p>
-            <p>Maintenance: sonam@rcmrs.bt</p>
-        </div>
+
+        <a href="signup.html" class="create-account">Create new account</a>
     </div>
 
     <script>
-        document.getElementById("unifiedLoginForm").addEventListener("submit", function (e) {
+        document.getElementById("loginForm").addEventListener("submit", function (e) {
             e.preventDefault();
             
             const role = document.getElementById("role").value;
             const email = document.getElementById("email").value.trim();
             const pass = document.getElementById("password").value;
-            const msg = document.getElementById("msg");
 
-            msg.style.display = "none";
-
-            // --- CITIZEN LOGIN ---
-            if (role === "citizen") {
-                if (email === "nima@rcmrs.bt" && pass === "1234") {
-                    localStorage.setItem("currentUserId", 1);
-                    window.location.href = "ci/dashboard.html"; // Go into ci folder
-                } else {
-                    showError("Invalid Citizen credentials.");
-                }
+            // Citizen Login
+            if (role === "citizen" && email === "nima@rcmrs.bt" && pass === "1234") {
+                window.location.href = "ci/dashboard.html";
             } 
-            
-            // --- MAINTENANCE LOGIN ---
-            else if (role === "maintenance") {
-                if ((email === "sonam@rcmrs.bt" || email === "dorji@rcmrs.bt") && pass === "1234") {
-                    localStorage.setItem("currentUserId", 2);
-                    window.location.href = "main/dashboard.html"; // Go into main folder
-                } else {
-                    showError("Invalid Maintenance credentials.");
-                }
+            // Maintenance Login
+            else if (role === "maintenance" && email === "sonam@rcmrs.bt" && pass === "1234") {
+                window.location.href = "main/dashboard.html";
             } 
-            
-            // --- ADMIN LOGIN ---
-            else if (role === "admin") {
-                if ((email === "sangay@rcmrs.bt" || email === "kinley@rcmrs.bt") && pass === "1234") {
-                    localStorage.setItem("currentUserId", 3);
-                    window.location.href = "admin/dashboard.html"; // Go into admin folder
-                } else {
-                    showError("Invalid Admin credentials.");
-                }
-            }
-
-            function showError(text) {
-                msg.style.display = "block";
-                msg.textContent = text;
+            // Admin Login
+            else if (role === "admin" && email === "sangay@rcmrs.bt" && pass === "1234") {
+                window.location.href = "admin/dashboard.html";
+            } 
+            // Error handling
+            else {
+                alert("Invalid Credentials for the selected role!\n\nPlease check your email and password.");
             }
         });
     </script>
