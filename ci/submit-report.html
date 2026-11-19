@@ -78,8 +78,7 @@
         </div>
     </div>
 
-    <script>
-        // 1. Handle Form Submission via API
+        <script>
         document.getElementById("reportForm").addEventListener("submit", async function (e) {
             e.preventDefault();
             
@@ -87,56 +86,42 @@
             btn.textContent = "Submitting...";
             btn.disabled = true;
 
-            // Gather data exactly as the backend contract requests
-            const reportData = {
-                road_name: document.getElementById("road_name").value.trim(),
-                location: document.getElementById("location").value.trim(),
-                road_type: document.getElementById("road_type").value,
-                condition_type: document.getElementById("condition_type").value,
-                priority: document.getElementById("priority").value,
-                description: document.getElementById("description").value.trim()
-            };
+            // 1. Grab the form element and create FormData
+            const form = document.getElementById("reportForm");
+            const formData = new FormData(form);
+
+            // 2. We have to manually append the file if it exists, 
+            // because sometimes browsers don't grab file inputs automatically in FormData.
+            const fileInput = document.getElementById("image");
+            if (fileInput.files.length > 0) {
+                formData.append("image", fileInput.files[0]);
+            }
 
             try {
+                // NOTE: Check your backend port (3000 vs 3001). I'll use 3000 based on earlier code.
                 const response = await fetch('http://localhost:3000/api/reports', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', // Send session cookie to prove who is submitting
-                    body: JSON.stringify(reportData)
+                    credentials: 'include', // Crucial for cookies
+                    body: formData          // Sending FormData directly!
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    document.getElementById("msg").innerHTML = `<div class="alert alert-success">✅ Report submitted successfully!</div>`;
-                    setTimeout(() => window.location.href = "track-report.html", 1300);
-                } else {
-                    alert(data.message || "Failed to submit report.");
+                if (data.error) {
+                    alert(data.error); // Shows validation errors
                     btn.textContent = "Submit Report";
                     btn.disabled = false;
+                } else {
+                    alert('✅ Report submitted successfully!');
+                    window.location.href = 'track-report.html';
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Could not connect to the server. Is the backend running?");
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Could not connect to the server.");
                 btn.textContent = "Submit Report";
                 btn.disabled = false;
             }
         });
-
-        // 2. Handle Logout via API
-        async function logoutUser(e) {
-            if(e) e.preventDefault();
-            try {
-                await fetch('http://localhost:3000/api/auth/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
-                });
-                window.location.href = "../index.html";
-            } catch (error) {
-                console.error("Logout failed", error);
-                window.location.href = "../index.html"; 
-            }
-        }
     </script>
 </body>
 </html>

@@ -55,27 +55,26 @@
         </div>
     </div>
 
-    <script>
-        let allReports = []; // Store reports fetched from the API
+        <!-- ... your table HTML above ... -->
+    </div>
 
-        // 1. Fetch Reports from API
+    <!-- REPLACE THE OLD SCRIPT WITH THIS -->
+    <script>
+        let allReports = []; 
+
         async function fetchReports() {
             try {
-                // The backend will read the cookie and ONLY send this citizen's reports
                 const response = await fetch('http://localhost:3000/api/reports', {
                     method: 'GET',
-                    credentials: 'include' // Crucial for cookies
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
                     allReports = await response.json();
                     renderTable();
                 } else if (response.status === 401) {
-                    // Unauthorized (not logged in)
                     alert("You must be logged in to view this page.");
                     window.location.href = "../index.html";
-                } else {
-                    document.getElementById("reportBody").innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Failed to load reports.</td></tr>`;
                 }
             } catch (error) {
                 console.error("Error fetching reports:", error);
@@ -83,12 +82,10 @@
             }
         }
 
-        // 2. Render Table (with Filters)
         function renderTable() {
             const status = document.getElementById("filterStatus").value;
             const search = document.getElementById("searchBox").value.toLowerCase();
 
-            // Filter based on dropdown and search box
             const filtered = allReports
                 .filter(r => status === "All" || r.status === status)
                 .filter(r => r.road_name.toLowerCase().includes(search));
@@ -102,35 +99,27 @@
 
             tbody.innerHTML = filtered.map(r => `
                 <tr>
-                    <!-- Using r.id or r.report_id depending on your database column name -->
-                    <td>#${r.id || r.report_id}</td>
+                    <td>#${r.id}</td>
                     <td>${r.road_name}</td>
                     <td>${r.location}</td>
                     <td>${r.condition_type}</td>
                     <td><span class="badge badge-${r.priority.toLowerCase()}">${r.priority}</span></td>
                     <td><span class="badge badge-${r.status.toLowerCase().replace(' ', '')}">${r.status}</span></td>
-                    <!-- Format the date nicely from the database timestamp -->
                     <td>${r.created_at ? r.created_at.split('T')[0] : (r.date || 'N/A')}</td>
                 </tr>
             `).join("");
         }
 
-        // 3. Logout Function
         async function logoutUser(e) {
             if(e) e.preventDefault();
             try {
-                await fetch('http://localhost:3000/api/auth/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
-                });
+                await fetch('http://localhost:3000/api/auth/logout', { method: 'POST', credentials: 'include' });
                 window.location.href = "../index.html";
             } catch (error) {
-                console.error("Logout failed", error);
                 window.location.href = "../index.html"; 
             }
         }
 
-        // Run fetch when page loads
         fetchReports();
     </script>
 </body>

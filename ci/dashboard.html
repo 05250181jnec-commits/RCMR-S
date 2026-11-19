@@ -25,7 +25,7 @@
 
     <div class="container">
         <h2 class="page-title">Report, Track and Improve Roads Together</h2>
-        <p class="page-subtitle">Together, let's keep our roads safe, clean, and well maintained. Welcome, <b id="userName">Citizen</b>!</p>
+        <p class="page-subtitle">Together, let's keep our roads safe, clean, and well maintained. Welcome, <b id="userName">Everyone</b>!</p>
 
         <!-- Quick actions -->
         <div class="dashboard-grid">
@@ -62,33 +62,25 @@
         </div>
     </div>
 
+            <!-- ... your HTML cards above ... -->
+    </div>
+
+    <!-- REPLACE THE OLD SCRIPT WITH THIS -->
     <script>
-        // Fetch dashboard data from the API
         async function loadDashboard() {
             try {
-                // 1. Get current logged-in user (backend knows who you are via cookie)
-                const userRes = await fetch('http://localhost:3000/api/auth/me', { 
-                    credentials: 'include' 
-                });
-                
+                const userRes = await fetch('http://localhost:3000/api/auth/me', { credentials: 'include' });
                 if (userRes.ok) {
                     const userData = await userRes.json();
                     document.getElementById("userName").textContent = userData.name || "Citizen";
                 } else {
-                    // If not logged in, kick them back to login
                     window.location.href = "../index.html";
                     return;
                 }
 
-                // 2. Get reports (The backend automatically filters to ONLY this user's reports)
-                const reportsRes = await fetch('http://localhost:3000/api/reports', { 
-                    credentials: 'include' 
-                });
-
+                const reportsRes = await fetch('http://localhost:3000/api/reports', { credentials: 'include' });
                 if (reportsRes.ok) {
                     const reports = await reportsRes.json();
-                    
-                    // 3. Update the stats cards
                     document.getElementById("pendingCount").textContent   = reports.filter(r => r.status === "Pending").length;
                     document.getElementById("progressCount").textContent  = reports.filter(r => r.status === "In Progress").length;
                     document.getElementById("completedCount").textContent = reports.filter(r => r.status === "Completed").length;
@@ -99,22 +91,16 @@
             }
         }
 
-        // Logout Function (Clears the backend cookie)
         async function logoutUser(e) {
             if(e) e.preventDefault();
             try {
-                await fetch('http://localhost:3000/api/auth/logout', { 
-                    method: 'POST', 
-                    credentials: 'include' 
-                });
+                await fetch('http://localhost:3000/api/auth/logout', { method: 'POST', credentials: 'include' });
                 window.location.href = "../index.html";
             } catch (error) {
-                console.error("Logout failed", error);
-                window.location.href = "../index.html"; // Force redirect anyway
+                window.location.href = "../index.html";
             }
         }
 
-        // Run the function when the page loads
         loadDashboard();
     </script>
 </body>
