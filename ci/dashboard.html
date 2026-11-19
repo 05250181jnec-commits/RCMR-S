@@ -17,15 +17,14 @@
             <a href="submit-report.html">Submit Report</a>
             <a href="track-report.html">Track Report</a>
             <a href="feedback.html">Feedback</a>
-            
-            <!-- FIX: Direct link up one folder to the main index.html -->
+            <!-- Fixed Logout Link -->
             <a href="../index.html" onclick="localStorage.removeItem('currentUserId')">Logout</a>
         </div>
     </div>
 
     <div class="container">
         <h2 class="page-title">Report, Track and Improve Roads Together</h2>
-        <p class="page-subtitle">Together, let's keep our roads safe, clean, and well maintained. Welcome, <b id="userName"></b>!</p>
+        <p class="page-subtitle">Together, let's keep our roads safe, clean, and well maintained. Welcome, <b id="userName">Citizen</b>!</p>
 
         <!-- Quick actions -->
         <div class="dashboard-grid">
@@ -62,18 +61,33 @@
         </div>
     </div>
 
-    <script src="js/script.js"></script>
     <script>
-        // We keep this part to show the user's name and stats
-        const user = getCurrentUser(); // Changed from requireCitizen() to avoid redirect loops
-        if (user) {
-            document.getElementById("userName").textContent = user.name;
-            const myReports = getReports().filter(r => r.user_id === user.id);
-            document.getElementById("pendingCount").textContent   = myReports.filter(r => r.status === "Pending").length;
-            document.getElementById("progressCount").textContent  = myReports.filter(r => r.status === "In Progress").length;
-            document.getElementById("completedCount").textContent = myReports.filter(r => r.status === "Completed").length;
-            document.getElementById("criticalCount").textContent  = myReports.filter(r => r.priority === "Critical").length;
+        // 1. Get the saved User ID from the login page
+        let userId = localStorage.getItem("currentUserId");
+        
+        // 2. Fallback: If they didn't log in, default to ID 1 (Nima Yoozer)
+        if (!userId) {
+            userId = 1;
+            localStorage.setItem("currentUserId", 1); 
         }
+
+        // 3. Set the Welcome Name
+        const nameDisplay = document.getElementById("userName");
+        if (userId == 1) nameDisplay.textContent = "Nima Yoozer";
+        else if (userId == 2) nameDisplay.textContent = "Sonam Tenzin";
+        else if (userId == 3) nameDisplay.textContent = "Sangay Choden";
+
+        // 4. Load the reports directly (Bypassing external script.js)
+        const allReports = JSON.parse(localStorage.getItem("reports")) || [];
+        
+        // Filter to only show reports belonging to this logged-in user
+        const myReports = allReports.filter(r => r.user_id == userId);
+
+        // 5. Update the stats cards
+        document.getElementById("pendingCount").textContent   = myReports.filter(r => r.status === "Pending").length;
+        document.getElementById("progressCount").textContent  = myReports.filter(r => r.status === "In Progress").length;
+        document.getElementById("completedCount").textContent = myReports.filter(r => r.status === "Completed").length;
+        document.getElementById("criticalCount").textContent  = myReports.filter(r => r.priority === "Critical").length;
     </script>
 </body>
 </html>
