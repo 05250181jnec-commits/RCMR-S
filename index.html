@@ -7,104 +7,87 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background-color: #ffffff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        
-        .login-box {
-            width: 400px; background: #ffffff; border: 1px solid #333;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); padding: 40px 30px; text-align: center;
-        }
-
-        .logo-container {
-            width: 100px; height: 100px; margin: 0 auto 20px auto; border-radius: 50%;
-            background: white; border: 2px solid #3498db; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
-        }
+        .login-box { width: 400px; background: #ffffff; border: 1px solid #333; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); padding: 40px 30px; text-align: center; }
+        .logo-container { width: 100px; height: 100px; margin: 0 auto 20px auto; border-radius: 50%; background: white; border: 2px solid #3498db; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .logo-container img { width: 80%; height: auto; }
-
         h1 { color: #0000ff; font-size: 28px; font-weight: bold; margin-bottom: 20px; font-family: 'Times New Roman', Times, serif; }
-
         .form-group { text-align: left; margin-bottom: 12px; }
         .form-group label { display: flex; align-items: center; font-size: 13px; color: #000; margin-bottom: 4px; }
         .checkbox-square { width: 10px; height: 10px; border: 1px solid #333; margin-right: 6px; display: inline-block; }
-        
-        .form-group input, .form-group select { 
-            width: 100%; padding: 9px; border: 1px solid #999; border-radius: 20px; 
-            outline: none; box-shadow: inset 0px 1px 3px rgba(0,0,0,0.1); font-size: 13px; 
-            background-color: white;
-        }
-
+        .form-group input { width: 100%; padding: 9px; border: 1px solid #999; border-radius: 20px; outline: none; box-shadow: inset 0px 1px 3px rgba(0,0,0,0.1); font-size: 13px; background-color: white; }
         .btn-login { width: 100%; padding: 10px; background-color: #0056ff; color: white; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; margin-top: 15px; }
         .btn-login:hover { background-color: #0040cc; }
-
         .forgot-password { display: flex; align-items: center; justify-content: center; font-size: 13px; margin-top: 15px; color: #000; text-decoration: none; }
-
         .create-account { display: inline-block; margin-top: 25px; color: #0000ff; font-weight: bold; text-decoration: none; font-size: 13px; }
         .create-account:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-
     <div class="login-box">
         <div class="logo-container">
             <img src="media/logo.png" alt="RCMRS Logo" onerror="this.src='https://via.placeholder.com/80?text=Logo'">
         </div>
-
         <h1>LOG IN</h1>
-
         <form id="loginForm">
-            <!-- NEW ROLE DROPDOWN -->
-            <div class="form-group">
-                <label><span class="checkbox-square"></span> Login As:</label>
-                <select id="role" required>
-                    <option value="" disabled selected>-- Select Your Role --</option>
-                    <option value="citizen">Citizen</option>
-                    <option value="maintenance">Maintenance Team</option>
-                    <option value="admin">Administrator</option>
-                </select>
-            </div>
-
             <div class="form-group">
                 <label><span class="checkbox-square"></span> Email Address:</label>
                 <input type="email" id="email" required>
             </div>
-
             <div class="form-group">
                 <label><span class="checkbox-square"></span> Enter Password:</label>
                 <input type="password" id="password" required>
             </div>
-
-            <button type="submit" class="btn-login">LOG IN</button>
-
-            <a href="#" class="forgot-password">
+            <button type="submit" class="btn-login" id="loginBtn">LOG IN</button>
+            <a href="forgot-password.html" class="forgot-password">
                 <span class="checkbox-square"></span> Forget Password?
             </a>
         </form>
-
         <a href="signup.html" class="create-account">Create new account</a>
     </div>
 
     <script>
-        document.getElementById("loginForm").addEventListener("submit", function (e) {
+        document.getElementById("loginForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            
-            const role = document.getElementById("role").value;
             const email = document.getElementById("email").value.trim();
             const pass = document.getElementById("password").value;
+            const btn = document.getElementById("loginBtn");
 
-            // Citizen Login
-            if (role === "citizen" && email === "nima@rcmrs.bt" && pass === "1234") {
-                window.location.href = "ci/dashboard.html";
-            } 
-            // Maintenance Login
-            else if (role === "maintenance" && email === "sonam@rcmrs.bt" && pass === "1234") {
-                window.location.href = "main/dashboard.html";
-            } 
-            // Admin Login
-            else if (role === "admin" && email === "sangay@rcmrs.bt" && pass === "1234") {
-                window.location.href = "admin/dashboard.html";
-            } 
-            // Error handling
-            else {
-                alert("Invalid Credentials for the selected role!\n\nPlease check your email and password.");
+            btn.textContent = "Logging in...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // Crucial for cookies
+                    body: JSON.stringify({ email: email, password: pass })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // The backend sends back the user's role. We redirect based on that.
+                    if (data.role === "Citizen") {
+                        window.location.href = "ci/dashboard.html";
+                    } else if (data.role === "Admin") {
+                        window.location.href = "admin/dashboard.html";
+                    } else if (data.role === "Maintenance") {
+                        window.location.href = "main/dashboard.html";
+                    } else {
+                        alert("Unknown role assigned to this user.");
+                        btn.textContent = "LOG IN";
+                        btn.disabled = false;
+                    }
+                } else {
+                    alert(data.message || "Invalid credentials.");
+                    btn.textContent = "LOG IN";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Could not connect to the server. Is the backend running?");
+                btn.textContent = "LOG IN";
+                btn.disabled = false;
             }
         });
     </script>

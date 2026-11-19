@@ -4,19 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit Report | RCMRS</title>
-     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-    <img src="media/logo.png" alt="Logo">
-    <h2>RCMRS</h2>
-</div>
+            <img src="media/logo.png" alt="Logo">
+            <h2>RCMRS</h2>
+        </div>
         <div class="nav-links">
             <a href="dashboard.html">Home</a>
             <a href="track-report.html">Track Report</a>
             <a href="feedback.html">Feedback</a>
-            <a href="#" onclick="logout()">Logout</a>
+            <!-- UPDATED LOGOUT -->
+            <a href="#" onclick="logoutUser(event)">Logout</a>
         </div>
     </div>
 
@@ -68,44 +69,74 @@
                     <textarea id="description" rows="4" placeholder="Describe the issue..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Upload Photo</label>
-                    <input type="file" id="image" accept="image/*">
+                    <label>Upload Photo (Not supported by backend yet)</label>
+                    <input type="file" id="image" accept="image/*" disabled>
                 </div>
-                <button type="submit" class="btn btn-orange">Submit Report</button>
+                <button type="submit" class="btn btn-orange" id="submitBtn">Submit Report</button>
                 <div id="msg"></div>
             </form>
         </div>
     </div>
 
-    <script src="js/script.js"></script>
     <script>
-        const user = requireCitizen();
-
-        document.getElementById("reportForm").addEventListener("submit", function (e) {
+        // 1. Handle Form Submission via API
+        document.getElementById("reportForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            if (!user) return;
+            
+            const btn = document.getElementById("submitBtn");
+            btn.textContent = "Submitting...";
+            btn.disabled = true;
 
-            const reports = getReports();
-            const newReport = {
-                id: 100 + reports.length + 1,
+            // Gather data exactly as the backend contract requests
+            const reportData = {
                 road_name: document.getElementById("road_name").value.trim(),
                 location: document.getElementById("location").value.trim(),
                 road_type: document.getElementById("road_type").value,
                 condition_type: document.getElementById("condition_type").value,
                 priority: document.getElementById("priority").value,
-                description: document.getElementById("description").value.trim(),
-                image: document.getElementById("image").files[0]?.name || "",
-                status: "Pending",
-                user_id: user.id,
-                date: new Date().toISOString().split("T")[0]
+                description: document.getElementById("description").value.trim()
             };
-            reports.push(newReport);
-            saveReports(reports);
 
-            document.getElementById("msg").innerHTML =
-                `<div class="alert alert-success">✅ Report #${newReport.id} submitted successfully!</div>`;
-            setTimeout(() => window.location.href = "track-report.html", 1300);
+            try {
+                const response = await fetch('http://localhost:3000/api/reports', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // Send session cookie to prove who is submitting
+                    body: JSON.stringify(reportData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById("msg").innerHTML = `<div class="alert alert-success">✅ Report submitted successfully!</div>`;
+                    setTimeout(() => window.location.href = "track-report.html", 1300);
+                } else {
+                    alert(data.message || "Failed to submit report.");
+                    btn.textContent = "Submit Report";
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Could not connect to the server. Is the backend running?");
+                btn.textContent = "Submit Report";
+                btn.disabled = false;
+            }
         });
+
+        // 2. Handle Logout via API
+        async function logoutUser(e) {
+            if(e) e.preventDefault();
+            try {
+                await fetch('http://localhost:3000/api/auth/logout', { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+                window.location.href = "../index.html";
+            } catch (error) {
+                console.error("Logout failed", error);
+                window.location.href = "../index.html"; 
+            }
+        }
     </script>
 </body>
 </html>

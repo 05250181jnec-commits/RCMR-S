@@ -4,19 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Report | RCMRS</title>
-     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="navbar">
         <div class="brand">
-    <img src="media/logo.png" alt="Logo">
-    <h2>RCMRS</h2>
-</div>
+            <img src="media/logo.png" alt="Logo">
+            <h2>RCMRS</h2>
+        </div>
         <div class="nav-links">
             <a href="dashboard.html">Home</a>
             <a href="submit-report.html">Submit Report</a>
             <a href="feedback.html">Feedback</a>
-            <a href="#" onclick="logout()">Logout</a>
+            <!-- UPDATED LOGOUT -->
+            <a href="#" onclick="logoutUser(event)">Logout</a>
         </div>
     </div>
 
@@ -47,26 +48,53 @@
                         <th>Date</th>
                     </tr>
                 </thead>
-                <tbody id="reportBody"></tbody>
+                <tbody id="reportBody">
+                    <tr><td colspan="7" style="text-align:center; padding: 20px;">Loading reports from database...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
-    <script src="js/script.js"></script>
     <script>
-        const user = requireCitizen();
+        let allReports = []; // Store reports fetched from the API
 
+        // 1. Fetch Reports from API
+        async function fetchReports() {
+            try {
+                // The backend will read the cookie and ONLY send this citizen's reports
+                const response = await fetch('http://localhost:3000/api/reports', {
+                    method: 'GET',
+                    credentials: 'include' // Crucial for cookies
+                });
+
+                if (response.ok) {
+                    allReports = await response.json();
+                    renderTable();
+                } else if (response.status === 401) {
+                    // Unauthorized (not logged in)
+                    alert("You must be logged in to view this page.");
+                    window.location.href = "../index.html";
+                } else {
+                    document.getElementById("reportBody").innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Failed to load reports.</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Error fetching reports:", error);
+                document.getElementById("reportBody").innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Could not connect to server.</td></tr>`;
+            }
+        }
+
+        // 2. Render Table (with Filters)
         function renderTable() {
-            if (!user) return;
             const status = document.getElementById("filterStatus").value;
             const search = document.getElementById("searchBox").value.toLowerCase();
 
-            const filtered = getReports()
-                .filter(r => r.user_id === user.id)
+            // Filter based on dropdown and search box
+            const filtered = allReports
                 .filter(r => status === "All" || r.status === status)
                 .filter(r => r.road_name.toLowerCase().includes(search));
 
             const tbody = document.getElementById("reportBody");
+            
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#888;">No reports found.</td></tr>`;
                 return;
@@ -74,18 +102,36 @@
 
             tbody.innerHTML = filtered.map(r => `
                 <tr>
-                    <td>#${r.id}</td>
+                    <!-- Using r.id or r.report_id depending on your database column name -->
+                    <td>#${r.id || r.report_id}</td>
                     <td>${r.road_name}</td>
                     <td>${r.location}</td>
                     <td>${r.condition_type}</td>
-                    <td><span class="badge ${priorityClass(r.priority)}">${r.priority}</span></td>
-                    <td><span class="badge ${statusClass(r.status)}">${r.status}</span></td>
-                    <td>${r.date}</td>
+                    <td><span class="badge badge-${r.priority.toLowerCase()}">${r.priority}</span></td>
+                    <td><span class="badge badge-${r.status.toLowerCase().replace(' ', '')}">${r.status}</span></td>
+                    <!-- Format the date nicely from the database timestamp -->
+                    <td>${r.created_at ? r.created_at.split('T')[0] : (r.date || 'N/A')}</td>
                 </tr>
             `).join("");
         }
 
-        renderTable();
+        // 3. Logout Function
+        async function logoutUser(e) {
+            if(e) e.preventDefault();
+            try {
+                await fetch('http://localhost:3000/api/auth/logout', { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+                window.location.href = "../index.html";
+            } catch (error) {
+                console.error("Logout failed", error);
+                window.location.href = "../index.html"; 
+            }
+        }
+
+        // Run fetch when page loads
+        fetchReports();
     </script>
 </body>
 </html>

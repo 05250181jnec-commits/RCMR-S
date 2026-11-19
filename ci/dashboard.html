@@ -17,8 +17,9 @@
             <a href="submit-report.html">Submit Report</a>
             <a href="track-report.html">Track Report</a>
             <a href="feedback.html">Feedback</a>
-            <!-- Fixed Logout Link -->
-            <a href="../index.html" onclick="localStorage.removeItem('currentUserId')">Logout</a>
+            
+            <!-- UPDATED LOGOUT: Now calls the API function -->
+            <a href="#" onclick="logoutUser(event)">Logout</a>
         </div>
     </div>
 
@@ -62,32 +63,59 @@
     </div>
 
     <script>
-        // 1. Get the saved User ID from the login page
-        let userId = localStorage.getItem("currentUserId");
-        
-        // 2. Fallback: If they didn't log in, default to ID 1 (Nima Yoozer)
-        if (!userId) {
-            userId = 1;
-            localStorage.setItem("currentUserId", 1); 
+        // Fetch dashboard data from the API
+        async function loadDashboard() {
+            try {
+                // 1. Get current logged-in user (backend knows who you are via cookie)
+                const userRes = await fetch('http://localhost:3000/api/auth/me', { 
+                    credentials: 'include' 
+                });
+                
+                if (userRes.ok) {
+                    const userData = await userRes.json();
+                    document.getElementById("userName").textContent = userData.name || "Citizen";
+                } else {
+                    // If not logged in, kick them back to login
+                    window.location.href = "../index.html";
+                    return;
+                }
+
+                // 2. Get reports (The backend automatically filters to ONLY this user's reports)
+                const reportsRes = await fetch('http://localhost:3000/api/reports', { 
+                    credentials: 'include' 
+                });
+
+                if (reportsRes.ok) {
+                    const reports = await reportsRes.json();
+                    
+                    // 3. Update the stats cards
+                    document.getElementById("pendingCount").textContent   = reports.filter(r => r.status === "Pending").length;
+                    document.getElementById("progressCount").textContent  = reports.filter(r => r.status === "In Progress").length;
+                    document.getElementById("completedCount").textContent = reports.filter(r => r.status === "Completed").length;
+                    document.getElementById("criticalCount").textContent  = reports.filter(r => r.priority === "Critical").length;
+                }
+            } catch (error) {
+                console.error("Error loading dashboard:", error);
+            }
         }
 
-        // 3. Set the Welcome Name
-        const nameDisplay = document.getElementById("userName");
-        if (userId == 1) nameDisplay.textContent = "Nima Yoozer";
-        else if (userId == 2) nameDisplay.textContent = "Sonam Tenzin";
-        else if (userId == 3) nameDisplay.textContent = "Sangay Choden";
+        // Logout Function (Clears the backend cookie)
+        async function logoutUser(e) {
+            if(e) e.preventDefault();
+            try {
+                await fetch('http://localhost:3000/api/auth/logout', { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+                window.location.href = "../index.html";
+            } catch (error) {
+                console.error("Logout failed", error);
+                window.location.href = "../index.html"; // Force redirect anyway
+            }
+        }
 
-        // 4. Load the reports directly (Bypassing external script.js)
-        const allReports = JSON.parse(localStorage.getItem("reports")) || [];
-        
-        // Filter to only show reports belonging to this logged-in user
-        const myReports = allReports.filter(r => r.user_id == userId);
-
-        // 5. Update the stats cards
-        document.getElementById("pendingCount").textContent   = myReports.filter(r => r.status === "Pending").length;
-        document.getElementById("progressCount").textContent  = myReports.filter(r => r.status === "In Progress").length;
-        document.getElementById("completedCount").textContent = myReports.filter(r => r.status === "Completed").length;
-        document.getElementById("criticalCount").textContent  = myReports.filter(r => r.priority === "Critical").length;
+        // Run the function when the page loads
+        loadDashboard();
     </script>
 </body>
 </html>
