@@ -110,52 +110,49 @@
         </form>
         <a href="signup.html" class="create-account">Create new account</a>
     </div>
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const email = document.getElementById("email").value.trim();
+        const pass = document.getElementById("password").value;
+        const btn = document.getElementById("loginBtn");
 
-    <script>
-        document.getElementById("loginForm").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const email = document.getElementById("email").value.trim();
-            const pass = document.getElementById("password").value;
-            const btn = document.getElementById("loginBtn");
+        btn.textContent = "Logging in...";
+        btn.disabled = true;
 
-            btn.textContent = "Logging in...";
-            btn.disabled = true;
+        try {
+            const response = await fetch('http://localhost:3000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ email: email, password: pass })
+            });
 
-            try {
-                const response = await fetch('http://localhost:3000/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', // Crucial for cookies
-                    body: JSON.stringify({ email: email, password: pass })
-                });
+            const data = await response.json();
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    // The backend sends back the user's role. We redirect based on that.
-                    if (data.role === "Citizen") {
-                        window.location.href = "ci/dashboard.html";
-                    } else if (data.role === "Admin") {
-                        window.location.href = "admin/dashboard.html";
-                    } else if (data.role === "Maintenance") {
-                        window.location.href = "main/dashboard.html";
-                    } else {
-                        alert("Unknown role assigned to this user.");
-                        btn.textContent = "LOG IN";
-                        btn.disabled = false;
-                    }
-                } else {
-                    alert(data.message || "Invalid credentials.");
-                    btn.textContent = "LOG IN";
-                    btn.disabled = false;
+            if (response.ok) {
+                // ROUTING BASED ON EMAIL - this bypasses the backend role bug!
+                if (email === "05250193.jnec@rub.edu.bt") {
+                    window.location.href = "admin/dashboard.html";
+                } 
+                else if (email === "05250196.jnec@rub.edu.bt") {
+                    window.location.href = "main/dashboard.html";
+                } 
+                else {
+                    window.location.href = "ci/dashboard.html";
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Could not connect to the server. Is the backend running?");
+            } else {
+                alert(data.message || "Invalid credentials.");
                 btn.textContent = "LOG IN";
                 btn.disabled = false;
             }
-        });
-    </script>
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Could not connect to the server.");
+            btn.textContent = "LOG IN";
+            btn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
