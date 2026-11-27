@@ -16,7 +16,6 @@
             <a href="dashboard.html">Home</a>
             <a href="submit-report.html">Submit Report</a>
             <a href="track-report.html">Track Report</a>
-            <!-- Updated Logout -->
             <a href="#" onclick="logoutUser(event)">Logout</a>
         </div>
     </div>
@@ -25,21 +24,21 @@
         <h2 class="page-title">Share Your Feedback</h2>
         <p class="page-subtitle">Rate completed maintenance services and help us improve.</p>
 
-        <!-- Summary Cards (Demo data so it looks nice for presentation) -->
+        <!-- Summary Cards -->
         <div class="dashboard-grid" style="margin-bottom: 2rem;">
             <div class="card" style="border-top: 5px solid #f1c40f;">
                 <div class="icon">⭐</div>
-                <h3>4.8/5</h3>
+                <h3 id="avgRating">0.0/5</h3>
                 <p>Average Rating</p>
             </div>
             <div class="card" style="border-top: 5px solid #2ecc71;">
                 <div class="icon">📊</div>
-                <h3>128</h3>
+                <h3 id="totalFeedback">0</h3>
                 <p>Total Feedback</p>
             </div>
             <div class="card" style="border-top: 5px solid #3498db;">
                 <div class="icon">✅</div>
-                <h3>92%</h3>
+                <h3 id="positivePct">0%</h3>
                 <p>Positive Reviews</p>
             </div>
         </div>
@@ -48,6 +47,16 @@
         <div class="auth-card" style="max-width: 700px; margin-top: 1rem;">
             <h2 style="font-size: 1.2rem;">Write Your Feedback</h2>
             <form id="feedbackForm">
+                <div class="form-group">
+                    <label>Select Completed Report</label>
+                    <select id="reportSelect" required>
+                        <option value="">Loading completed reports...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Your Rating (1 to 5)</label>
+                    <input type="number" id="rating" min="1" max="5" required placeholder="e.g. 5">
+                </div>
                 <div class="form-group">
                     <label>Comment</label>
                     <textarea id="comment" rows="4" placeholder="Tell us about the repair work..." required></textarea>
@@ -59,21 +68,61 @@
     </div>
 
     <script>
+        // Fetch reports from the database to populate the dropdown
+        async function loadCompletedReports() {
+            try {
+                const response = await fetch('http://localhost:3000/api/reports', { credentials: 'include' });
+                if (response.ok) {
+                    const reports = await response.json();
+                    const completed = reports.filter(r => r.status === "Completed");
+
+                    const select = document.getElementById("reportSelect");
+                    if (completed.length === 0) {
+                        select.innerHTML = `<option value="">No completed reports yet</option>`;
+                    } else {
+                        select.innerHTML = `<option value="">-- Choose a completed report --</option>` + 
+                            completed.map(r => `<option value="${r.id}">#${r.id} - ${r.road_name}</option>`).join("");
+                    }
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
         // Handle Form Submission
         document.getElementById("feedbackForm").addEventListener("submit", async function (e) {
             e.preventDefault();
             
-            const msg = document.getElementById("msg");
-            msg.innerHTML = `<div class="alert alert-success">🎉 Thank you for your feedback!</div>`;
-            
-            // Clear the form
+            const reportId = document.getElementById("reportSelect").value;
+            const rating = parseInt(document.getElementById("rating").value);
+            const comment = document.getElementById("comment").value.trim();
+
+            // Save to localStorage for the demo (since backend doesn't have a feedback table yet)
+            let feedbacks = JSON.parse(localStorage.getItem("feedbacks")) || [];
+            feedbacks.push({ reportId, rating, comment });
+            localStorage.setItem("feedbacks", JSON.stringify(feedbacks));
+
+            // Show success and update UI
+            document.getElementById("msg").innerHTML = `<div class="alert alert-success">🎉 Thank you for your feedback!</div>`;
             document.getElementById("feedbackForm").reset();
             
-            // Redirect back to dashboard after 2 seconds
-            setTimeout(() => window.location.href = "dashboard.html", 2000);
+            // Refresh the stats
+            updateStats();
         });
 
-        // Handle Logout
+        // Calculate dynamic stats based on localStorage
+        function updateStats() {
+            const feedbacks = JSON.parse(localStorage.getItem("feedbacks")) || [];
+            
+            const total = feedbacks.length;
+            const avg = total ? (feedbacks.reduce((s, f) => s + f.rating, 0) / total).toFixed(1) : 0;
+            const positive = total ? Math.round((feedbacks.filter(f => f.rating >= 4).length / total) * 100) : 0;
+
+            document.getElementById("avgRating").textContent = avg + "/5";
+            document.getElementById("totalFeedback").textContent = total;
+            document.getElementById("positivePct").textContent = positive + "%";
+        }
+
         async function logoutUser(e) {
             if(e) e.preventDefault();
             try {
@@ -83,6 +132,10 @@
                 window.location.href = "../index.html";
             }
         }
+
+        // Run on load
+        loadCompletedReports();
+        updateStats();
     </script>
 </body>
 </html>

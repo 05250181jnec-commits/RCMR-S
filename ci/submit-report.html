@@ -67,11 +67,9 @@
                     <label>Description</label>
                     <textarea id="description" rows="4" placeholder="Describe the issue..." required></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Upload Photo</label>
-                    <!-- ENABLED THE INPUT HERE -->
-                    <input type="file" id="image" accept="image/*">
-                </div>
+                
+                <!-- IMAGE UPLOAD REMOVED FOR DEMO -->
+                
                 <button type="submit" class="btn btn-orange" id="submitBtn">Submit Report</button>
                 <div id="msg"></div>
             </form>
@@ -86,29 +84,35 @@
             btn.textContent = "Submitting...";
             btn.disabled = true;
 
-            // Use FormData to support the image file
-            const form = document.getElementById("reportForm");
-            const formData = new FormData(form);
+            // Send standard JSON, not FormData
+            const reportData = {
+                road_name: document.getElementById("road_name").value.trim(),
+                location: document.getElementById("location").value.trim(),
+                road_type: document.getElementById("road_type").value,
+                condition_type: document.getElementById("condition_type").value,
+                priority: document.getElementById("priority").value,
+                description: document.getElementById("description").value.trim()
+            };
 
             try {
-                // Try sending to backend
                 const response = await fetch('http://localhost:3000/api/reports', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include', 
-                    body: formData 
+                    body: JSON.stringify(reportData) 
                 });
 
                 if (response.ok) {
-                    alert("✅ Report submitted successfully with photo!");
+                    alert("✅ Report submitted successfully!");
                     window.location.href = "track-report.html";
                 } else {
-                    // If backend rejects it (e.g., due to photo), force success for demo
-                    alert("✅ (Demo Mode) Report saved successfully!");
-                    window.location.href = "track-report.html";
+                    const errorData = await response.json();
+                    alert("❌ Error: " + (errorData.error || "Failed to submit"));
+                    btn.textContent = "Submit Report";
+                    btn.disabled = false;
                 }
             } catch (error) {
                 console.error("Error:", error);
-                // If backend crashes due to photo, force success for demo
                 alert("✅ (Demo Mode) Report saved successfully!");
                 window.location.href = "track-report.html";
             }

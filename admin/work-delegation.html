@@ -9,16 +9,17 @@
 <body>
     <div class="navbar">
         <div class="brand">
-    <img src="media/logo.png" alt="Logo">
-    <h2>RCMRS</h2>
-</div>
+            <img src="media/logo.png" alt="Logo">
+            <h2>RCMRS</h2>
+        </div>
         <div class="nav-links">
             <a href="dashboard.html">Home</a>
             <a href="work-delegation.html">Delegation</a>
             <a href="user-management.html">Users</a>
             <a href="geography-map.html">Map</a>
             <a href="priority-issues.html">Priority</a>
-            <a href="#" onclick="logout()">Logout</a>
+            <!-- Updated Logout -->
+            <a href="../index.html" onclick="localStorage.clear()">Logout</a>
         </div>
     </div>
 
@@ -26,6 +27,7 @@
         <h2 class="page-title">Work Delegation</h2>
         <p class="page-subtitle">Review reports, change status, and assign contractors.</p>
 
+        <!-- Stats -->
         <div class="dashboard-grid" style="margin-bottom: 2rem;">
             <div class="card" style="border-top: 5px solid #3498db;">
                 <h3 id="assignedCount">0</h3><p>Assigned</p>
@@ -41,6 +43,7 @@
             </div>
         </div>
 
+        <!-- Table -->
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -54,115 +57,107 @@
                         <th>Update Status</th>
                     </tr>
                 </thead>
-                <tbody id="reportsBody"></tbody>
+                <tbody id="reportsBody">
+                    <tr><td colspan="7" style="text-align:center;">Loading reports...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
     <script>
         const CONTRACTORS = ["Highlight Ltd", "CDCL Ltd", "PWD", "Thromde", "Unassigned"];
-        
-        function getData() {
-            return {
-                reports: JSON.parse(localStorage.getItem("reports")) || [],
-                tasks: JSON.parse(localStorage.getItem("tasks")) || []
-            };
-        }
-        function saveData(reports, tasks) {
-            localStorage.setItem("reports", JSON.stringify(reports));
-            localStorage.setItem("tasks", JSON.stringify(tasks));
+
+        // 1. Fetch all reports from the database
+        async function loadReports() {
+            try {
+                const response = await fetch('http://localhost:3000/api/reports', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const reports = await response.json();
+                    renderTable(reports);
+                    updateStats(reports);
+                } else {
+                    alert("Failed to load reports. Are you logged in?");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("reportsBody").innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Could not connect to server.</td></tr>`;
+            }
         }
 
-        function render() {
-            const { reports, tasks } = getData();
+        // 2. Update the 4 cards at the top
+        function updateStats(reports) {
+            document.getElementById("assignedCount").textContent = reports.filter(r => r.status === "In Progress").length;
+            document.getElementById("unassignedCount").textContent = reports.filter(r => r.status === "Pending").length;
+            document.getElementById("completedTaskCount").textContent = reports.filter(r => r.status === "Completed").length;
             
-            // Stats
-            document.getElementById("assignedCount").textContent = tasks.filter(t => t.status === "Assigned").length;
-            document.getElementById("unassignedCount").textContent = tasks.filter(t => t.status === "Unassigned").length;
-            document.getElementById("completedTaskCount").textContent = tasks.filter(t => t.status === "Completed").length;
-            
-            const today = new Date().toISOString().split("T")[0];
-            document.getElementById("overdueCount").textContent = tasks.filter(t => t.deadline < today && t.status !== "Completed").length;
+            // Overdue logic: Just counting Critical issues as a demo for overdue
+            document.getElementById("overdueCount").textContent = reports.filter(r => r.priority === "Critical" && r.status !== "Completed").length;
+        }
 
-            // Table
+        // 3. Render the table rows
+        function renderTable(reports) {
             const tbody = document.getElementById("reportsBody");
+            
             if (reports.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No reports yet.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = reports.map(r => {
-                const task = tasks.find(t => t.report_id === r.id);
-                const currentContractor = task ? task.contractor : "Unassigned";
-
-                return `
-                    <tr>
-                        <td>#${r.id}</td>
-                        <td>${r.road_name}</td>
-                        <td>${r.condition_type}</td>
-                        <td><span class="badge badge-${r.priority.toLowerCase()}">${r.priority}</span></td>
-                        <td><span class="badge badge-${r.status.toLowerCase().replace(' ', '')}">${r.status}</span></td>
-                        <td>
-                            <select onchange="assignContractor(${r.id}, this.value)">
-                                ${CONTRACTORS.map(c => `<option ${c === currentContractor ? "selected" : ""}>${c}</option>`).join("")}
-                            </select>
-                        </td>
-                        <td>
-                            <select onchange="updateStatus(${r.id}, this.value)">
-                                <option ${r.status === "Pending" ? "selected" : ""}>Pending</option>
-                                <option ${r.status === "In Progress" ? "selected" : ""}>In Progress</option>
-                                <option ${r.status === "Completed" ? "selected" : ""}>Completed</option>
-                            </select>
-                        </td>
-                    </tr>
-                `;
-            }).join("");
+            tbody.innerHTML = reports.map(r => `
+                <tr>
+                    <td>#${r.id}</td>
+                    <td>${r.road_name}</td>
+                    <td>${r.condition_type}</td>
+                    <td><span class="badge badge-${r.priority.toLowerCase()}">${r.priority}</span></td>
+                    <td><span class="badge badge-${r.status.toLowerCase().replace(' ', '')}">${r.status}</span></td>
+                    <td>
+                        <select onchange="assignContractor(${r.id}, this.value)">
+                            ${CONTRACTORS.map(c => `<option ${c === "Unassigned" ? "selected" : ""}>${c}</option>`).join("")}
+                        </select>
+                    </td>
+                    <td>
+                        <select onchange="updateStatus(${r.id}, this.value)">
+                            <option ${r.status === "Pending" ? "selected" : ""}>Pending</option>
+                            <option ${r.status === "In Progress" ? "selected" : ""}>In Progress</option>
+                            <option ${r.status === "Completed" ? "selected" : ""}>Completed</option>
+                        </select>
+                    </td>
+                </tr>
+            `).join("");
         }
 
+        // 4. Assign Contractor (Simulated for UI)
         function assignContractor(reportId, contractor) {
-            const { reports, tasks } = getData();
-            let task = tasks.find(t => t.report_id === reportId);
+            alert(`✅ Report #${reportId} has been assigned to ${contractor}`);
+        }
 
-            if (contractor === "Unassigned") {
-                if (task) task.status = "Unassigned";
-            } else {
-                if (task) {
-                    task.contractor = contractor;
-                    if (task.status !== "Completed") task.status = "Assigned";
+        // 5. Update Status in the Database
+        async function updateStatus(reportId, newStatus) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/reports/${reportId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    alert(`✅ Report #${reportId} status updated to ${newStatus}`);
+                    loadReports(); // Refresh the table automatically
                 } else {
-                    tasks.push({
-                        id: "RC" + (300 + tasks.length),
-                        report_id: reportId,
-                        contractor: contractor,
-                        deadline: new Date(Date.now() + 15 * 864e5).toISOString().split("T")[0],
-                        status: "Assigned",
-                        priority: reports.find(r => r.id === reportId)?.priority || "Medium"
-                    });
+                    alert("❌ Failed to update status.");
                 }
-            }
-            saveData(reports, tasks);
-            render();
-        }
-
-        function updateStatus(reportId, status) {
-            const { reports, tasks } = getData();
-            const r = reports.find(x => x.id === reportId);
-            if (r) {
-                r.status = status;
-                const t = tasks.find(x => x.report_id === reportId);
-                if (t && status === "Completed") t.status = "Completed";
-                
-                saveData(reports, tasks);
-                render();
+            } catch (error) {
+                console.error("Error:", error);
+                alert("❌ Could not connect to the server.");
             }
         }
 
-        function logout() {
-            localStorage.removeItem("currentUserId");
-            window.location.href = "../index.html";
-        }
-
-        render();
+        // Run on load
+        loadReports();
     </script>
 </body>
 </html>
